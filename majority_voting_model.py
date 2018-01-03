@@ -1,10 +1,9 @@
 from collections import Counter
 from basemodel import BaseModel
 import tensorflow as tf
+from hyperparamters import HPS
 import numpy as np
 import random
-from create_mini_train_corpus import func
-from basemodel import HPS
 from functools import lru_cache
 from load_cifar_10 import unpickle
 import pickle
@@ -73,7 +72,7 @@ def get_three_predictions(x, agree_number=2):
     agreed_indices = []
     for ii, r in enumerate(results):
         assert len(r) == 3
-        if agree_number <= len(set(r)) <= 3 - agree_number + 1:
+        if len(set(r)) <= 3 - agree_number + 1:
             agreed_indices.append(ii)
             majorities.append(get_marjority(r))
         else:
@@ -128,12 +127,11 @@ def get_cifar_10_set(index):
     return url
 
 
-def save_labled_data(file_name, unlabel_data, results, indices):
-    x = unlabel_data[indices]
-
-    assert len(x) == len(results)
+def save_labled_data(file_name, x, y):
+    assert len(x) == len(y)
+    print('new labled data size: {}'.format(len(x)))
     with open(file_name, 'wb') as f:
-        d = {b'data': x, b'labels': results}
+        d = {b'data': x, b'labels': y}
         pickle.dump(d, f)
     return file_name
 
@@ -154,7 +152,40 @@ def get_precision_of_ensemble():
     print('-- {}'.format(precision))
 
 
-def read_unlabel_data(unlabel_dataset_index, loop):
+def merge_two_dataset(x1, x2, y1, y2):
+    # ratio = 0.5
+    # new_set_length = 10000
+    # x1_number = int((ratio * new_set_length) / len(y1))
+    # x2_number = int(((1 - ratio) * new_set_length) / len(y2))
+    #
+    # x1_indices = np.arange(len(y1))
+    # x2_indices = np.arange(len(y2))
+    #
+    # np.random.shuffle(x1_indices)
+    # np.random.shuffle(x2_indices)
+
+    # x1 = np.array(x1)[x1_indices]
+    # x1 = x1[:x1_number]
+    # x2 = np.array(x2)[x2_indices][:x2_number]
+    #
+    # y1 = np.array(y1)[x1_indices][:x1_number]
+    # y2 = np.array(y2)[x2_indices][:x2_number]
+
+    assert len(x1) == len(y1)
+    assert len(x2) == len(y2)
+
+    x = np.concatenate((x1, x2), axis=0)
+    y = np.concatenate((y1, y2), axis=0)
+
+    indices = np.arange(len(y))
+    np.random.shuffle(indices)
+
+    x, y = x[indices], y[indices]
+
+    return x, y
+
+
+def read_unlabel_data(labeled_x_y, unlabel_dataset_index, loop):
     unlabel_data = get_unlabel_data(get_cifar_10_set(unlabel_dataset_index))
     predicated, agree_indices = get_three_predictions(unlabel_data, agree_number=2)
     print('conflict number: {}'.format(conflict_num))
@@ -162,6 +193,10 @@ def read_unlabel_data(unlabel_dataset_index, loop):
     print('agreed number is {}'.format(len(agree_indices)))
 
     create_label_dataset = 'dataset/cifar10_new_label_{}'.format(loop)
-    save_labled_data(create_label_dataset, unlabel_data, predicated, agree_indices)
+    label_x, label_y = labeled_x_y
+    new_label_data = unlabel_data[agree_indices]
+    label_x, label_y = merge_two_dataset(label_x, new_label_data, label_y, predicated)
+
+    save_labled_data(create_label_dataset, label_x, label_y)
 
     return create_label_dataset

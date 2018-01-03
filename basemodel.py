@@ -5,6 +5,7 @@ import numpy as np
 from hyperparamters import Hps
 import os
 from datetime import datetime
+from copy import deepcopy
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '4, 5, 6'
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -75,7 +76,7 @@ class BaseModel:
         tf.summary.scalar('loss', loss)
 
         l2_loss = tf.nn.l2_loss
-        loss += self.hps.regularization * tf.reduce_sum([l2_loss(self.w),
+        loss += self.hps.regularization * tf.reduce_mean([l2_loss(self.w),
                                                          l2_loss(self.w2),
                                                          l2_loss(self.b),
                                                          l2_loss(self.b2),
@@ -129,11 +130,14 @@ def train(hps, train_corpus, model_path=None):
     model = BaseModel(hps, iterator=iterator)
     saver = tf.train.Saver()
     sess = tf.Session()
+
     if model_path is not None:
         print('load pre-trained')
         saver.restore(sess, save_path=model_path)
+    else:
+        sess.run(tf.global_variables_initializer())
 
-    min_loss, min_loss_global_step, min_sess = float('inf'), 0, None
+    min_loss, min_loss_global_step = float('inf'), 0
 
     def save_model(_loss, global_step, _sess):
         model_file_name = './models/step-{}-loss-{}-mark-{}'.format(global_step, _loss, mark)
@@ -143,7 +147,7 @@ def train(hps, train_corpus, model_path=None):
     total_steps = 0
 
     with sess:
-        sess.run(tf.global_variables_initializer())
+        loss = float('inf')
         for i in range(epoch):
             sess.run(iterator.initializer)
             while True:
@@ -154,10 +158,10 @@ def train(hps, train_corpus, model_path=None):
                     if total_steps % 100 == 0:
                         print("epoch: {} loss: {}".format(i, loss))
                         summary_writer.flush()
-                        if loss < min_loss:
+                        if total_steps > 0 and total_steps % 500 == 0 and loss < min_loss:
                             min_loss = loss
                             min_loss_global_step = global_steps
-                            min_sess = sess
+                            model_path = save_model(min_loss, min_loss_global_step, sess)
 
                     total_steps += 1
 
@@ -170,35 +174,7 @@ def train(hps, train_corpus, model_path=None):
         if loss < min_loss:
             min_loss = loss
             min_loss_global_step = global_steps
-            min_sess = sess
+            model_path = save_model(min_loss, min_loss_global_step, sess)
 
         print('final loss {} precision is {}'.format(min_loss, np.e ** (-min_loss)))
-        model_path = save_model(min_loss, min_loss_global_step, min_sess)
         return model_path
-
-
-hps1 = Hps(); hps1.hidden_layers = [100, 100]
-hps2 = Hps(); hps2.hidden_layers = [80, 80]
-hps3 = Hps(); hps3.hidden_layers = [130, 130]
-HPS = [hps1, hps2, hps3]
-# HPS = [hps1]
-
-
-if __name__ == '__main__':
-    # train(HPS[2])
-
-    INIT_CORPUS = 'dataset/cifar-10-batches-py/data_batch_1'
-
-    train_corpus_file = 'dataset/cifar10_new_label_1'
-    # train_corpus_file = 'dataset/mini_corpus_train.txt'
-    train_corpus_file = 'dataset/cifar-10-batches-py/data_batch_1'
-
-    if train_corpus_file == INIT_CORPUS:
-        model_paths = [None] * 3
-    else:
-        model_paths = [line.strip() for line in open('model_paths.txt')]
-
-    with open('model_paths.txt', 'w') as f:
-        models = [train(hps, train_corpus=train_corpus_file, model_path=m_p)
-                  for hps, m_p in zip(HPS, model_paths)]
-        f.writelines('\n'.join(models))
