@@ -1,11 +1,11 @@
 from collections import Counter
-from basemodel import Hps
 from basemodel import BaseModel
 import tensorflow as tf
 import numpy as np
 import random
 from create_mini_train_corpus import func
 from basemodel import HPS
+from functools import lru_cache
 
 
 conflict_num = 0
@@ -80,10 +80,40 @@ for i in range(10000):
     r_x = random.randrange(-span, span)
     r_y = random.randrange(-span, span)
 
-    X.append([r_x, r_y])
-    Y.append(func(r_x, r_y))
+    x_y, _type = func(r_x, r_y)
+
+    X.append(list(x_y))
+    Y.append(_type)
 
 label = np.array(Y)
+
+
+@lru_cache(maxsize=128)
+def get_test_x_y():
+    X_test, y_test = [], []
+    with open('dataset/test.txt') as f:
+        for ii, line in enumerate(f):
+            if ii == 0: continue
+
+            values = line.strip().split()
+            X_test.append(list(map(int, values[:-1])))
+            y_test.append(int(values[-1]))
+
+    return X_test, y_test
+
+
+def get_test_set_precision(model_index):
+    X_test, y_test = get_test_x_y()
+    result = get_model_i_result(X_test, model_index)
+    result = np.array(result)
+    precision = np.sum(result == np.array(y_test)) / len(y_test)
+    return precision
+
+
+print('test set precision: \n')
+print(get_test_set_precision(0))
+print(get_test_set_precision(1))
+print(get_test_set_precision(2))
 
 index = 0
 result = get_model_i_result(X, index)
@@ -107,6 +137,9 @@ predicated = np.array(predicated)
 precision = np.sum(predicated == label) / len(label)
 print('final precision is {}'.format(precision))
 
+with open('dataset/corpus_train_loop_3.txt', 'w') as f:
+    for x, y in zip(X, predicated):
+        f.write("\n{}\t{}".format("\t".join(map(str, x)), y))
 
 # with tf.Graph().as_default():
 #     model, session = load_model

@@ -2,15 +2,7 @@ import tensorflow as tf
 from data_pipeline import get_train_batch
 import random
 import numpy as np
-
-
-class Hps:
-    batch_size = 128
-    x_size = 2
-    y_size = 2
-    learning_rate = 1e-3
-    regularization = 1e-3
-    hidden_layers = [7, ]
+from hyperparamters import Hps
 
 
 VARIABLES = 'variables'
@@ -30,6 +22,7 @@ class BaseModel:
                 self.get_loss_with_x_y(iterator.x, iterator.y)
 
     def __build_layer(self):
+        self.input_x = tf.placeholder(dtype=self.dtype, shape=[self.hps.batch_size, ])
         with tf.variable_scope('hidden', reuse=tf.AUTO_REUSE):
             self.w = tf.get_variable(
                 'w', [self.hps.x_size, self.hps.hidden_layers[0]],
@@ -97,16 +90,10 @@ class BaseModel:
         return op, global_step
 
 
-hps1 = Hps(); hps1.hidden_layers = [24]
-hps2 = Hps(); hps2.hidden_layers = [25]
-hps3 = Hps(); hps3.hidden_layers = [23]
-HPS = [hps1, hps2, hps3]
-
-
 def train(hps, train_corpus, model_path=None):
     tf.reset_default_graph()
 
-    epoch = 200
+    epoch = 20
     mark = "2_dimensional_total_50_hidden_layer_{}_epoch_{}".format(hps.hidden_layers[0], epoch)
 
     iterator = get_train_batch(train_corpus, batch_size=hps.batch_size)
@@ -116,6 +103,7 @@ def train(hps, train_corpus, model_path=None):
     saver = tf.train.Saver()
     sess = tf.Session()
     if model_path is not None:
+        print('load pre-trained')
         saver.restore(sess, save_path=model_path)
 
     min_loss, min_loss_global_step, min_sess = float('inf'), 0, None
@@ -161,11 +149,19 @@ def train(hps, train_corpus, model_path=None):
         return model_path
 
 
+hps1 = Hps(); hps1.hidden_layers = [24]
+hps2 = Hps(); hps2.hidden_layers = [25]
+hps3 = Hps(); hps3.hidden_layers = [23]
+HPS = [hps1, hps2, hps3]
+
+
 if __name__ == '__main__':
     # train(HPS[2])
-    train_corpus_file = 'dataset/corpus_train_loop_1.txt'
 
-    INIT_CORPUS = 'dataset/mini_corpus_train.txt'
+    INIT_CORPUS = 'dataset/cifar10_init_train.txt'
+
+    train_corpus_file = 'dataset/cifar10_init_train.txt'
+    # train_corpus_file = 'dataset/mini_corpus_train.txt'
 
     if train_corpus_file == INIT_CORPUS:
         model_paths = [None] * 3

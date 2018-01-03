@@ -7,14 +7,19 @@ BatchInput = namedtuple('batch_input', ['initializer', 'x', 'y'])
 
 def parser_tsv(line):
     line = tf.string_split([line], delimiter='\t').values
-    num = tf.string_to_number(line[:-1])
+    # num = tf.string_to_number(line[1])
+    num = tf.string_split([line[1]]).values
+    num = tf.string_to_number(num)
     num = tf.cast(num, tf.int32)
-    label = tf.cast(tf.string_to_number(line[-1]), tf.int32)
+    # num = line[:-1]
+    label = tf.cast(tf.string_to_number((line[0])), tf.int32)
+    num = tf.cast(num, tf.int32)
+    # label = tf.cast(tf.string_to_number(line[-1]), tf.int32)
     return num, label
 
 
 def one_hot_parser(numbers, labels):
-    NUM_CLASS = 2
+    NUM_CLASS = 10
     one_hot = tf.one_hot(labels, depth=NUM_CLASS)
     return numbers, one_hot
 
@@ -50,7 +55,7 @@ def get_unlable_data(file_name, batch_size=128):
 
 if __name__ == '__main__':
     with tf.Session() as sess:
-        input = get_train_batch('dataset/mini_corpus_train.txt', batch_size=28)
+        input = get_train_batch('dataset/cifar10_init_train.txt', batch_size=28)
         sess.run(input.initializer)
         while True:
             try:
