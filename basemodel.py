@@ -97,22 +97,28 @@ class BaseModel:
         return op, global_step
 
 
-hps1 = Hps(); hps1.hidden_layers = [7]
-hps2 = Hps(); hps2.hidden_layers = [10]
-hps3 = Hps(); hps3.hidden_layers = [15]
+hps1 = Hps(); hps1.hidden_layers = [24]
+hps2 = Hps(); hps2.hidden_layers = [25]
+hps3 = Hps(); hps3.hidden_layers = [23]
 HPS = [hps1, hps2, hps3]
 
 
-def train(hps):
+def train(hps, train_corpus, model_path=None):
     tf.reset_default_graph()
 
-    epoch = 20
+    epoch = 200
     mark = "2_dimensional_total_50_hidden_layer_{}_epoch_{}".format(hps.hidden_layers[0], epoch)
 
-    iterator = get_train_batch('dataset/mini_corpus_train.txt', batch_size=hps.batch_size)
-    model = BaseModel(hps, iterator=iterator)
+    iterator = get_train_batch(train_corpus, batch_size=hps.batch_size)
+    # iterator = get_train_batch('dataset/corpus_train_loop_1.txt', batch_size=hps.batch_size)
 
+    model = BaseModel(hps, iterator=iterator)
     saver = tf.train.Saver()
+    sess = tf.Session()
+    if model_path is not None:
+        saver.restore(sess, save_path=model_path)
+
+    min_loss, min_loss_global_step, min_sess = float('inf'), 0, None
 
     def save_model(_loss, global_step, _sess):
         model_file_name = './models/step-{}-loss-{}-mark-{}'.format(global_step, _loss, mark)
@@ -121,15 +127,22 @@ def train(hps):
 
     total_steps = 0
 
-    with tf.Session() as sess:
+    with sess:
         sess.run(tf.global_variables_initializer())
         for i in range(epoch):
-            print('epoch: {}'.format(i))
             sess.run(iterator.initializer)
             while True:
                 try:
                     loss, _, summary = sess.run([model.loss, model.op, model.summary])
-                    if total_steps % 10 == 0: print("epoch: {} loss: {}".format(i, loss))
+                    if total_steps % 50 == 0:
+                        print("epoch: {} loss: {}".format(i, loss))
+
+                        if loss < min_loss:
+                            min_loss = loss
+                            global_steps = sess.run(model.global_steps)
+                            min_loss_global_step = global_steps
+                            min_sess = sess
+
                     total_steps += 1
 
                 except tf.errors.OutOfRangeError:
@@ -137,13 +150,29 @@ def train(hps):
 
         global_steps = sess.run(model.global_steps)
         print(global_steps)
-        print('final loss {} precision is {}'.format(loss, np.e ** (-loss)))
-        model_path = save_model(loss, global_steps, sess)
+
+        if loss < min_loss:
+            min_loss = loss
+            min_loss_global_step = global_steps
+            min_sess = sess
+
+        print('final loss {} precision is {}'.format(min_loss, np.e ** (-min_loss)))
+        model_path = save_model(min_loss, min_loss_global_step, min_sess)
         return model_path
 
 
 if __name__ == '__main__':
     # train(HPS[2])
+    train_corpus_file = 'dataset/corpus_train_loop_1.txt'
+
+    INIT_CORPUS = 'dataset/mini_corpus_train.txt'
+
+    if train_corpus_file == INIT_CORPUS:
+        model_paths = [None] * 3
+    else:
+        model_paths = [line.strip() for line in open('model_paths.txt')]
+
     with open('model_paths.txt', 'w') as f:
-        models = [train(hps) for hps in HPS]
+        models = [train(hps, train_corpus=train_corpus_file, model_path=m_p)
+                  for hps, m_p in zip(HPS, model_paths)]
         f.writelines('\n'.join(models))
