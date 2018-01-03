@@ -5,7 +5,6 @@ import numpy as np
 from hyperparamters import Hps
 import os
 from datetime import datetime
-from copy import deepcopy
 import glob
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '4, 5, 6'
