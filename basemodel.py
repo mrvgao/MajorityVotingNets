@@ -3,6 +3,9 @@ from data_pipeline import get_train_batch
 import random
 import numpy as np
 from hyperparamters import Hps
+import os
+
+os.environ['CUDA_VISIBLE_DEVICES'] = '4, 5, 6'
 
 
 VARIABLES = 'variables'
