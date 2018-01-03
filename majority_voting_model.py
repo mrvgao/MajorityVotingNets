@@ -156,7 +156,7 @@ def get_precision_of_ensemble():
 
 
 def merge_two_dataset(x1, x2, y1, y2):
-    # labeled_ratio = 0.7  # new data : original data
+    new_ratio = 0.7  # new data : original data
     # total_length = len(y1)
     # x1_number = int(total_length * labeled_ratio)
     # x1_indices = np.arange(len(y1))
@@ -164,11 +164,11 @@ def merge_two_dataset(x1, x2, y1, y2):
     # x1 = np.array(x1)[x1_indices][:x1_number]
     # y1 = np.array(y1)[x1_indices][:x1_number]
     #
-    # x2_number = int(total_length * (1 - labeled_ratio))
-    # x2_indices = np.arange(len(y2))
-    # np.random.shuffle(x2_indices)
-    # x2 = np.array(x2)[x2_indices][:x2_number]
-    # y2 = np.array(y2)[x2_indices][:x2_number]
+    x2_number = int(len(y1) * new_ratio)
+    x2_indices = np.arange(len(y2))
+    np.random.shuffle(x2_indices)
+    x2 = np.array(x2)[x2_indices][:x2_number]
+    y2 = np.array(y2)[x2_indices][:x2_number]
 
     assert len(x1) == len(y1)
     assert len(x2) == len(y2)

@@ -6,6 +6,7 @@ class Hps:
     learning_rate = 1e-3
     regularization = 1e-3
     hidden_layers = [7, ]
+    total_size = 1000
 
 
 hps1 = Hps(); hps1.hidden_layers = [100, 100]

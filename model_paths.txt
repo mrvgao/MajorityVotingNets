@@ -1,3 +1,0 @@
-./models/step-8400-loss-0.260336309671402-mark-2_dimensional_total_50_hidden_layer_100_epoch_30-8400
-./models/step-8400-loss-0.14991344511508942-mark-2_dimensional_total_50_hidden_layer_80_epoch_30-8400
-./models/step-8400-loss-0.18704521656036377-mark-2_dimensional_total_50_hidden_layer_130_epoch_30-8400

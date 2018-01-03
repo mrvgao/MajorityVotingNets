@@ -25,11 +25,11 @@ def one_hot_parser(numbers, labels):
     return numbers, one_hot
 
 
-def get_train_batch(file_name, batch_size=128):
+def get_train_batch(file_name, batch_size=128, total_size=-1):
 
     d = unpickle(file_name)
-    X = d[b'data']
-    Y = d[b'labels']
+    X = d[b'data'][:total_size]
+    Y = d[b'labels'][:total_size]
 
     X = tf.convert_to_tensor(X)
     Y = tf.convert_to_tensor(Y)

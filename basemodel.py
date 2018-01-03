@@ -128,7 +128,7 @@ def train(hps, train_corpus, model_path=None):
     epoch = hps.epoch
     mark = "2_dimensional_total_50_hidden_layer_{}_epoch_{}".format(hps.hidden_layers[0], epoch)
 
-    iterator = get_train_batch(train_corpus, batch_size=hps.batch_size)
+    iterator = get_train_batch(train_corpus, batch_size=hps.batch_size, total_size=hps.total_size)
     # iterator = get_train_batch('dataset/corpus_train_loop_1.txt', batch_size=hps.batch_size)
 
     now = datetime.utcnow().strftime('%Y%m%d%H%M%S')
