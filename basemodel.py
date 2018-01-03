@@ -124,7 +124,7 @@ def train(hps, train_corpus, model_path=None):
     # iterator = get_train_batch('dataset/corpus_train_loop_1.txt', batch_size=hps.batch_size)
 
     now = datetime.utcnow().strftime('%Y%m%d%H%M%S')
-    summary_writer = tf.summary.FileWriter('tf-log/run-{}-{}-{}'.format(now, mark))
+    summary_writer = tf.summary.FileWriter('tf-log/run-{}-{}'.format(now, mark))
 
     model = BaseModel(hps, iterator=iterator)
     saver = tf.train.Saver()
