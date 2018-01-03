@@ -151,6 +151,9 @@ def get_precision_of_ensemble():
     precision = np.sum(np.array(predicated) == y) / len(y)
     print('-- {}'.format(precision))
 
+    with open('precision_log', 'a') as f:
+        f.write('\n precision: {}'.format(precision))
+
 
 def merge_two_dataset(x1, x2, y1, y2):
     # ratio = 0.5
