@@ -97,7 +97,7 @@ class BaseModel:
 def train(hps, train_corpus, model_path=None):
     tf.reset_default_graph()
 
-    epoch = 50
+    epoch = 30
     mark = "2_dimensional_total_50_hidden_layer_{}_epoch_{}".format(hps.hidden_layers[0], epoch)
 
     iterator = get_train_batch(train_corpus, batch_size=hps.batch_size)
@@ -153,9 +153,9 @@ def train(hps, train_corpus, model_path=None):
         return model_path
 
 
-hps1 = Hps(); hps1.hidden_layers = [24]
-hps2 = Hps(); hps2.hidden_layers = [25]
-hps3 = Hps(); hps3.hidden_layers = [23]
+hps1 = Hps(); hps1.hidden_layers = [50]
+hps2 = Hps(); hps2.hidden_layers = [60]
+hps3 = Hps(); hps3.hidden_layers = [70]
 HPS = [hps1, hps2, hps3]
 
 
