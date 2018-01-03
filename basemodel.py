@@ -96,7 +96,7 @@ class BaseModel:
 def train(hps, train_corpus, model_path=None):
     tf.reset_default_graph()
 
-    epoch = 20
+    epoch = 50
     mark = "2_dimensional_total_50_hidden_layer_{}_epoch_{}".format(hps.hidden_layers[0], epoch)
 
     iterator = get_train_batch(train_corpus, batch_size=hps.batch_size)
@@ -125,7 +125,7 @@ def train(hps, train_corpus, model_path=None):
             while True:
                 try:
                     loss, _, summary = sess.run([model.loss, model.op, model.summary])
-                    if total_steps % 50 == 0:
+                    if total_steps % 100 == 0:
                         print("epoch: {} loss: {}".format(i, loss))
 
                         if loss < min_loss:
@@ -163,8 +163,9 @@ if __name__ == '__main__':
 
     INIT_CORPUS = 'dataset/cifar-10-batches-py/data_batch_1'
 
-    train_corpus_file = 'dataset/cifar-10-batches-py/data_batch_1'
+    train_corpus_file = 'dataset/cifar10_new_label_1'
     # train_corpus_file = 'dataset/mini_corpus_train.txt'
+    train_corpus_file = 'dataset/cifar-10-batches-py/data_batch_1'
 
     if train_corpus_file == INIT_CORPUS:
         model_paths = [None] * 3

@@ -6,6 +6,8 @@ import random
 from create_mini_train_corpus import func
 from basemodel import HPS
 from functools import lru_cache
+from load_cifar_10 import unpickle
+import pickle
 
 
 conflict_num = 0
@@ -34,19 +36,18 @@ def get_predicate_from_model(x, model, session):
     return session.run(model.eval(x))
 
 
-models = [None, None, None]
-sessions = [None, None, None]
-
-file_paths = [line.strip() for line in open('model_paths.txt')]
-
-parameters = [
-    (HPS[0], file_paths[0]),
-    (HPS[1], file_paths[1]),
-    (HPS[2], file_paths[2]),
-]
-
-
 def get_model_i_result(x, model_index):
+    models = [None, None, None]
+    sessions = [None, None, None]
+
+    file_paths = [line.strip() for line in open('model_paths.txt')]
+
+    parameters = [
+        (HPS[0], file_paths[0]),
+        (HPS[1], file_paths[1]),
+        (HPS[2], file_paths[2]),
+    ]
+
     tf.reset_default_graph()
     with tf.Graph().as_default():
     #     if models[model_index] is None:
@@ -67,37 +68,37 @@ def get_three_predictions(x):
 
     results = list(results)
 
-    majorities = [get_marjority(r) for r in results]
+    majorities = []
 
-    return majorities
+    agreed_indices = []
+    for ii, r in enumerate(results):
+        assert len(r) == 3
+        if len(set(r)) == 1:
+            agreed_indices.append(ii)
+            majorities.append(get_marjority(r))
+        else:
+            continue
 
-
-X = []
-Y = []
-
-for i in range(10000):
-    span = 2000000
-    r_x = random.randrange(-span, span)
-    r_y = random.randrange(-span, span)
-
-    x_y, _type = func(r_x, r_y)
-
-    X.append(list(x_y))
-    Y.append(_type)
-
-label = np.array(Y)
+    return majorities, agreed_indices
 
 
 @lru_cache(maxsize=128)
 def get_test_x_y():
-    X_test, y_test = [], []
-    with open('dataset/test.txt') as f:
-        for ii, line in enumerate(f):
-            if ii == 0: continue
+    # X_test, y_test = [], []
+    # with open('dataset/test.txt') as f:
+    #     for ii, line in enumerate(f):
+    #         if ii == 0: continue
+    #
+    #         values = line.strip().split()
+    #         X_test.append(list(map(int, values[:-1])))
+    #         y_test.append(int(values[-1]))
+    #
+    # return X_test, y_test
 
-            values = line.strip().split()
-            X_test.append(list(map(int, values[:-1])))
-            y_test.append(int(values[-1]))
+    d = unpickle(get_cifar_10_set('test'))
+
+    X_test = d[b'data']
+    y_test = d[b'labels']
 
     return X_test, y_test
 
@@ -110,47 +111,75 @@ def get_test_set_precision(model_index):
     return precision
 
 
+def get_unlabel_data(file_path):
+    d = unpickle(file_path)
+    unlabel_X = d[b'data']
+
+    return unlabel_X
+
+
+def get_cifar_10_set(index):
+    url = 'dataset/cifar-10-batches-py/'
+    if index == 'test':
+        url += 'test_batch'
+    else:
+        url += 'data_batch_{}'.format(index)
+
+    return url
+
+
+def save_labled_data(file_name, unlabel_data, results, indices):
+    x = unlabel_data[indices]
+
+    assert len(x) == len(results)
+    with open(file_name, 'wb') as f:
+        d = {b'data': x, b'labels': results}
+        pickle.dump(d, f)
+    return file_name
+
+
 print('test set precision: \n')
 print(get_test_set_precision(0))
 print(get_test_set_precision(1))
 print(get_test_set_precision(2))
 
-index = 0
-result = get_model_i_result(X, index)
-result = np.array(result)
-precision = np.sum(result == label) / len(label)
-print('model {} precision is {}'.format(index + 1, precision))
-index = 1
-result = get_model_i_result(X, index)
-result = np.array(result)
-precision = np.sum(result == label) / len(label)
-print('model {} precision is {}'.format(index + 1, precision))
-index = 2
-result = get_model_i_result(X, index)
-result = np.array(result)
-precision = np.sum(result == label) / len(label)
-print('model {} precision is {}'.format(index + 1, precision))
+new_added_label = 'dataset/new_added_label'
 
-predicated = get_three_predictions(X)
+
+unlabel_data = get_unlabel_data(get_cifar_10_set(2))
+# index = 0
+# result = get_model_i_result(unlabel_data, index)
+# result = np.array(result)
+# print(result)
+# precision = np.sum(result == label) / len(label)
+# print('model {} precision is {}'.format(index + 1, precision))
+# index = 1
+# result = get_model_i_result(unlabel_data, index)
+# result = np.array(result)
+# print(result)
+# precision = np.sum(result == label) / len(label)
+# print('model {} precision is {}'.format(index + 1, precision))
+# index = 2
+# result = get_model_i_result(unlabel_data, index)
+# result = np.array(result)
+# print(result)
+# precision = np.sum(result == label) / len(label)
+# print('model {} precision is {}'.format(index + 1, precision))
+#
+predicated, agree_indices = get_three_predictions(unlabel_data)
 print('conflict number: {}'.format(conflict_num))
-predicated = np.array(predicated)
-precision = np.sum(predicated == label) / len(label)
-print('final precision is {}'.format(precision))
+print('data set size is {}'.format(len(unlabel_data)))
+print('agreed number is {}'.format(len(agree_indices)))
 
-with open('dataset/corpus_train_loop_3.txt', 'w') as f:
-    for x, y in zip(X, predicated):
-        f.write("\n{}\t{}".format("\t".join(map(str, x)), y))
+save_labled_data('dataset/cifar10_new_label_1', unlabel_data, predicated, agree_indices)
 
-# with tf.Graph().as_default():
-#     model, session = load_model
-#     output = session.run(model.eval(x))
-#     predicate_label = np.argmax(output, axis=1)
-#     print(predicate_label)
+
+# predicated = np.array(predicated)
+# precision = np.sum(predicated == label) / len(label)
+# print('final precision is {}'.format(precision))
 #
-# with tf.Graph().as_default():
-#     model, session = load_model
-#     output = session.run(model.eval(x))
-#     predicate_label = np.argmax(output, axis=1)
-#     print(predicate_label)
+# with open('dataset/corpus_train_loop_3.txt', 'w') as f:
+#     for x, y in zip(X, predicated):
+#         f.write("\n{}\t{}".format("\t".join(map(str, x)), y))
 #
-#
+
