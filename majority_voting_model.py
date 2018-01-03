@@ -156,7 +156,7 @@ def get_precision_of_ensemble():
 
 
 def merge_two_dataset(x1, x2, y1, y2):
-    labeled_ratio = 0.4  # new data : original data
+    labeled_ratio = 0.7  # new data : original data
     total_length = len(y1)
     x1_number = int(total_length * labeled_ratio)
     x1_indices = np.arange(len(y1))
