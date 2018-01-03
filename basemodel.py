@@ -4,6 +4,7 @@ import random
 import numpy as np
 from hyperparamters import Hps
 import os
+from datetime import datetime
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '4, 5, 6'
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -122,6 +123,9 @@ def train(hps, train_corpus, model_path=None):
     iterator = get_train_batch(train_corpus, batch_size=hps.batch_size)
     # iterator = get_train_batch('dataset/corpus_train_loop_1.txt', batch_size=hps.batch_size)
 
+    now = datetime.utcnow().strftime('%Y%m%d%H%M%S')
+    summary_writer = tf.summary.FileWriter('tf-log/run-{}-{}-{}'.format(now, mark))
+
     model = BaseModel(hps, iterator=iterator)
     saver = tf.train.Saver()
     sess = tf.Session()
@@ -145,9 +149,11 @@ def train(hps, train_corpus, model_path=None):
             while True:
                 try:
                     loss, _, summary = sess.run([model.loss, model.op, model.summary])
+                    summary_writer.add_summary(summary)
+
                     if total_steps % 100 == 0:
                         print("epoch: {} loss: {}".format(i, loss))
-
+                        summary_writer.flush()
                         if loss < min_loss:
                             min_loss = loss
                             global_steps = sess.run(model.global_steps)
@@ -172,11 +178,11 @@ def train(hps, train_corpus, model_path=None):
         return model_path
 
 
-hps1 = Hps(); hps1.hidden_layers = [50, 50]
+hps1 = Hps(); hps1.hidden_layers = [100, 100]
 hps2 = Hps(); hps2.hidden_layers = [60, 60]
 hps3 = Hps(); hps3.hidden_layers = [70, 70]
 HPS = [hps1, hps2, hps3]
-HPS = [hps2]
+HPS = [hps1]
 
 
 if __name__ == '__main__':
