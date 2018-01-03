@@ -45,4 +45,4 @@ def train_with_loop(max_size=20):
 
 
 if __name__ == '__main__':
-    train_with_loop(10)
+    train_with_loop(200)

@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 
-data = [0.3704, 0.3945, 0.4015, 0.410, 0.4236, 0.4286, 0.4348, 0.4368, 0.4344, 0.4379]
+data = [float(line.strip().replace('precision: ', '')) for line in open('precision_log') if line.strip() != '']
 
 plt.plot(data)
 plt.show()
