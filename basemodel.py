@@ -6,6 +6,7 @@ from hyperparamters import Hps
 import os
 from datetime import datetime
 from copy import deepcopy
+import glob
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '4, 5, 6'
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -115,6 +116,12 @@ class BaseModel:
         return op, global_step
 
 
+def delete_summaries(summary_file_name):
+    file_names = glob.glob(summary_file_name)
+    for f in file_names:
+        os.remove(f)
+
+
 def train(hps, train_corpus, model_path=None):
     tf.reset_default_graph()
 
@@ -161,6 +168,7 @@ def train(hps, train_corpus, model_path=None):
                         if total_steps > 0 and total_steps % 500 == 0 and loss < min_loss:
                             min_loss = loss
                             min_loss_global_step = global_steps
+                            delete_summaries(model_path)
                             model_path = save_model(min_loss, min_loss_global_step, sess)
 
                     total_steps += 1

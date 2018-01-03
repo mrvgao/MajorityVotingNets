@@ -1,0 +1,3 @@
+./models/step-20551-loss-0.30404752492904663-mark-2_dimensional_total_50_hidden_layer_100_epoch_30-20551
+./models/step-19671-loss-0.2879459261894226-mark-2_dimensional_total_50_hidden_layer_80_epoch_30-19671
+./models/step-21330-loss-0.22057455778121948-mark-2_dimensional_total_50_hidden_layer_130_epoch_30-21330
