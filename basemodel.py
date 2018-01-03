@@ -117,7 +117,8 @@ class BaseModel:
 
 
 def delete_summaries(summary_file_name):
-    file_names = glob.glob(summary_file_name)
+    if summary_file_name is None: return None
+    file_names = glob.glob(summary_file_name + '*')
     for f in file_names:
         os.remove(f)
 
@@ -182,6 +183,7 @@ def train(hps, train_corpus, model_path=None):
         if loss < min_loss:
             min_loss = loss
             min_loss_global_step = global_steps
+            delete_summaries(model_path)
             model_path = save_model(min_loss, min_loss_global_step, sess)
 
         print('final loss {} precision is {}'.format(min_loss, np.e ** (-min_loss)))
