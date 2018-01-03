@@ -1,5 +1,6 @@
 class Hps:
-    batch_size = 128
+    epoch = 50
+    batch_size = 256
     x_size = 32*32*3
     y_size = 10
     learning_rate = 1e-3

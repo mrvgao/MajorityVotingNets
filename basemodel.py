@@ -42,7 +42,7 @@ class BaseModel:
 
         with tf.variable_scope('w2', reuse=tf.AUTO_REUSE):
             self.w2 = tf.get_variable(
-                'w2', [self.hps.hidden_layers[0], self.hps.y_size],
+                'w2', [self.hps.hidden_layers[0], self.hps.hidden_layers[1]],
                 dtype=BaseModel.dtype, initializer=tf.truncated_normal_initializer(stddev=0.05)
             )
 
@@ -51,6 +51,20 @@ class BaseModel:
         with tf.variable_scope('b2', reuse=tf.AUTO_REUSE):
             self.b2 = tf.get_variable(
                 'b2', [],
+                dtype=BaseModel.dtype, initializer=tf.zeros_initializer
+            )
+
+        with tf.variable_scope('w3', reuse=tf.AUTO_REUSE):
+            self.w3 = tf.get_variable(
+                'w3', [self.hps.hidden_layers[1], self.hps.y_size],
+                dtype=BaseModel.dtype, initializer=tf.truncated_normal_initializer(stddev=0.05)
+            )
+
+        tf.add_to_collection(VARIABLES, self.w3)
+
+        with tf.variable_scope('b3', reuse=tf.AUTO_REUSE):
+            self.b3 = tf.get_variable(
+                'b3', [],
                 dtype=BaseModel.dtype, initializer=tf.zeros_initializer
             )
 
@@ -63,7 +77,9 @@ class BaseModel:
         loss += self.hps.regularization * tf.reduce_sum([l2_loss(self.w),
                                                          l2_loss(self.w2),
                                                          l2_loss(self.b),
-                                                         l2_loss(self.b2)])
+                                                         l2_loss(self.b2),
+                                                         l2_loss(self.w3),
+                                                         l2_loss(self.b3)])
 
         return loss
 
@@ -74,8 +90,11 @@ class BaseModel:
         # predicate = tf.nn.sigmoid(predicate)
 
         output_2 = tf.matmul(output_1, self.w2) + self.b2
-        # output_2 = tf.nn.relu(output_2)
-        return output_2
+        output_2 = tf.nn.leaky_relu(output_2)
+
+        output_3 = tf.matmul(output_2, self.w3) + self.b3
+        # output_2 = tf.sigmoid(output_2)
+        return output_3
 
     def get_loss_with_x_y(self, x, y):
         output = self.eval(x)
@@ -97,7 +116,7 @@ class BaseModel:
 def train(hps, train_corpus, model_path=None):
     tf.reset_default_graph()
 
-    epoch = 30
+    epoch = hps.epoch
     mark = "2_dimensional_total_50_hidden_layer_{}_epoch_{}".format(hps.hidden_layers[0], epoch)
 
     iterator = get_train_batch(train_corpus, batch_size=hps.batch_size)
@@ -153,10 +172,11 @@ def train(hps, train_corpus, model_path=None):
         return model_path
 
 
-hps1 = Hps(); hps1.hidden_layers = [50]
-hps2 = Hps(); hps2.hidden_layers = [60]
-hps3 = Hps(); hps3.hidden_layers = [70]
+hps1 = Hps(); hps1.hidden_layers = [50, 50]
+hps2 = Hps(); hps2.hidden_layers = [60, 60]
+hps3 = Hps(); hps3.hidden_layers = [70, 70]
 HPS = [hps1, hps2, hps3]
+HPS = [hps2]
 
 
 if __name__ == '__main__':
