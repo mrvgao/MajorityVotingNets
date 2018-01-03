@@ -161,9 +161,9 @@ HPS = [hps1, hps2, hps3]
 if __name__ == '__main__':
     # train(HPS[2])
 
-    INIT_CORPUS = 'dataset/cifar10_init_train.txt'
+    INIT_CORPUS = 'dataset/cifar-10-batches-py/data_batch_1'
 
-    train_corpus_file = 'dataset/cifar10_init_train.txt'
+    train_corpus_file = 'dataset/cifar-10-batches-py/data_batch_1'
     # train_corpus_file = 'dataset/mini_corpus_train.txt'
 
     if train_corpus_file == INIT_CORPUS:
