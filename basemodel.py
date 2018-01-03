@@ -6,6 +6,7 @@ from hyperparamters import Hps
 import os
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '4, 5, 6'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
 VARIABLES = 'variables'

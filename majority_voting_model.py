@@ -61,7 +61,7 @@ def get_model_i_result(x, model_index):
         return predicate_label
 
 
-def get_three_predictions(x):
+def get_three_predictions(x, agree_number=2):
     results = zip(get_model_i_result(x, 0),
                   get_model_i_result(x, 1),
                   get_model_i_result(x, 2))
@@ -73,7 +73,7 @@ def get_three_predictions(x):
     agreed_indices = []
     for ii, r in enumerate(results):
         assert len(r) == 3
-        if len(set(r)) == 1:
+        if len(set(r)) <= 3 - agree_number + 1:
             agreed_indices.append(ii)
             majorities.append(get_marjority(r))
         else:
@@ -138,48 +138,24 @@ def save_labled_data(file_name, unlabel_data, results, indices):
     return file_name
 
 
-print('test set precision: \n')
+print('single test set precision: \n')
 print(get_test_set_precision(0))
 print(get_test_set_precision(1))
 print(get_test_set_precision(2))
 
 new_added_label = 'dataset/new_added_label'
 
+print('ensenmble precision is : \n')
+x, y = get_test_x_y()
+predicated, agree_indices = get_three_predictions(x, same_number=1)
+precision = np.sum(predicated == y)
+print('-- {}'.format(precision))
 
 unlabel_data = get_unlabel_data(get_cifar_10_set(2))
-# index = 0
-# result = get_model_i_result(unlabel_data, index)
-# result = np.array(result)
-# print(result)
-# precision = np.sum(result == label) / len(label)
-# print('model {} precision is {}'.format(index + 1, precision))
-# index = 1
-# result = get_model_i_result(unlabel_data, index)
-# result = np.array(result)
-# print(result)
-# precision = np.sum(result == label) / len(label)
-# print('model {} precision is {}'.format(index + 1, precision))
-# index = 2
-# result = get_model_i_result(unlabel_data, index)
-# result = np.array(result)
-# print(result)
-# precision = np.sum(result == label) / len(label)
-# print('model {} precision is {}'.format(index + 1, precision))
-#
-predicated, agree_indices = get_three_predictions(unlabel_data)
+
+predicated, agree_indices = get_three_predictions(unlabel_data, same_number=3)
 print('conflict number: {}'.format(conflict_num))
 print('data set size is {}'.format(len(unlabel_data)))
 print('agreed number is {}'.format(len(agree_indices)))
 
 save_labled_data('dataset/cifar10_new_label_1', unlabel_data, predicated, agree_indices)
-
-
-# predicated = np.array(predicated)
-# precision = np.sum(predicated == label) / len(label)
-# print('final precision is {}'.format(precision))
-#
-# with open('dataset/corpus_train_loop_3.txt', 'w') as f:
-#     for x, y in zip(X, predicated):
-#         f.write("\n{}\t{}".format("\t".join(map(str, x)), y))
-#
-
