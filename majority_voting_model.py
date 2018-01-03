@@ -73,7 +73,7 @@ def get_three_predictions(x, agree_number=2):
     agreed_indices = []
     for ii, r in enumerate(results):
         assert len(r) == 3
-        if len(set(r)) <= 3 - agree_number + 1:
+        if agree_number <= len(set(r)) <= 3 - agree_number + 1:
             agreed_indices.append(ii)
             majorities.append(get_marjority(r))
         else:
@@ -138,24 +138,30 @@ def save_labled_data(file_name, unlabel_data, results, indices):
     return file_name
 
 
-print('single test set precision: \n')
-print(get_test_set_precision(0))
-print(get_test_set_precision(1))
-print(get_test_set_precision(2))
+LOOP = 0
 
-new_added_label = 'dataset/new_added_label'
 
-print('ensenmble precision is : \n')
-x, y = get_test_x_y()
-predicated, agree_indices = get_three_predictions(x, same_number=1)
-precision = np.sum(predicated == y)
-print('-- {}'.format(precision))
+def get_precision_of_ensemble():
+    print('single test set precision: \n')
+    print(get_test_set_precision(0))
+    print(get_test_set_precision(1))
+    print(get_test_set_precision(2))
 
-unlabel_data = get_unlabel_data(get_cifar_10_set(2))
+    print('ensenmble precision is : \n')
+    x, y = get_test_x_y()
+    predicated, agree_indices = get_three_predictions(x, agree_number=1)
+    precision = np.sum(np.array(predicated) == y) / len(y)
+    print('-- {}'.format(precision))
 
-predicated, agree_indices = get_three_predictions(unlabel_data, same_number=3)
-print('conflict number: {}'.format(conflict_num))
-print('data set size is {}'.format(len(unlabel_data)))
-print('agreed number is {}'.format(len(agree_indices)))
 
-save_labled_data('dataset/cifar10_new_label_1', unlabel_data, predicated, agree_indices)
+def read_unlabel_data(unlabel_dataset_index, loop):
+    unlabel_data = get_unlabel_data(get_cifar_10_set(unlabel_dataset_index))
+    predicated, agree_indices = get_three_predictions(unlabel_data, agree_number=2)
+    print('conflict number: {}'.format(conflict_num))
+    print('data set size is {}'.format(len(unlabel_data)))
+    print('agreed number is {}'.format(len(agree_indices)))
+
+    create_label_dataset = 'dataset/cifar10_new_label_{}'.format(loop)
+    save_labled_data(create_label_dataset, unlabel_data, predicated, agree_indices)
+
+    return create_label_dataset

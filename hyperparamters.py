@@ -1,5 +1,5 @@
 class Hps:
-    epoch = 250
+    epoch = 100
     batch_size = 256
     x_size = 32*32*3
     y_size = 10

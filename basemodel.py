@@ -148,15 +148,14 @@ def train(hps, train_corpus, model_path=None):
             sess.run(iterator.initializer)
             while True:
                 try:
-                    loss, _, summary = sess.run([model.loss, model.op, model.summary])
-                    summary_writer.add_summary(summary)
+                    loss, _, summary, global_steps = sess.run([model.loss, model.op, model.summary, model.global_steps])
+                    summary_writer.add_summary(summary, global_step=global_steps)
 
                     if total_steps % 100 == 0:
                         print("epoch: {} loss: {}".format(i, loss))
                         summary_writer.flush()
                         if loss < min_loss:
                             min_loss = loss
-                            global_steps = sess.run(model.global_steps)
                             min_loss_global_step = global_steps
                             min_sess = sess
 
@@ -179,10 +178,10 @@ def train(hps, train_corpus, model_path=None):
 
 
 hps1 = Hps(); hps1.hidden_layers = [100, 100]
-hps2 = Hps(); hps2.hidden_layers = [60, 60]
-hps3 = Hps(); hps3.hidden_layers = [70, 70]
+hps2 = Hps(); hps2.hidden_layers = [80, 80]
+hps3 = Hps(); hps3.hidden_layers = [130, 130]
 HPS = [hps1, hps2, hps3]
-HPS = [hps1]
+# HPS = [hps1]
 
 
 if __name__ == '__main__':

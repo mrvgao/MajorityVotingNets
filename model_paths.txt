@@ -1,1 +1,0 @@
-./models/step-8000-loss-0.33211424946784973-mark-2_dimensional_total_50_hidden_layer_100_epoch_200-8000
