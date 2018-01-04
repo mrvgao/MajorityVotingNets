@@ -6,6 +6,7 @@ from hyperparamters import Hps
 import os
 from datetime import datetime
 import glob
+from tqdm import tqdm
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '4, 5, 6'
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -155,6 +156,7 @@ def train(hps, train_corpus, model_path=None):
 
     with sess:
         loss = float('inf')
+        # epoch_bar = tqdm(range(epoch))
         for i in range(epoch):
             sess.run(iterator.initializer)
             while True:
@@ -162,10 +164,12 @@ def train(hps, train_corpus, model_path=None):
                     loss, _, summary, global_steps = sess.run([model.loss, model.op, model.summary, model.global_steps])
                     summary_writer.add_summary(summary, global_step=global_steps)
 
-                    if total_steps % 100 == 0:
-                        print("epoch: {} loss: {}".format(i, loss))
+                    if total_steps % 500 == 0:
+                        print("epoch: {}/{} loss: {}".format(i, epoch, loss))
+
+                    if total_steps > 0 and total_steps % 50 == 0:
                         summary_writer.flush()
-                        if total_steps > 0 and total_steps % 500 == 0 and loss < min_loss:
+                        if loss < min_loss:
                             min_loss = loss
                             min_loss_global_step = global_steps
                             delete_summaries(model_path)
@@ -177,7 +181,7 @@ def train(hps, train_corpus, model_path=None):
                     break # break while, into another for loop
 
         global_steps = sess.run(model.global_steps)
-        print(global_steps)
+        # print(global_steps)
 
         if loss < min_loss:
             min_loss = loss

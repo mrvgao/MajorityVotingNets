@@ -110,9 +110,12 @@ def get_test_set_precision(model_index):
     return precision
 
 
-def get_unlabel_data(file_path):
+def get_unlabel_data(file_path, size=None):
     d = unpickle(file_path)
     unlabel_X = d[b'data']
+    if size:
+        indices = np.random.choice(np.arange(len(unlabel_X)), size=size, replace=True)
+        unlabel_X = unlabel_X[indices]
 
     return unlabel_X
 
@@ -156,7 +159,8 @@ def get_precision_of_ensemble():
 
 
 def merge_two_dataset(x1, x2, y1, y2):
-    new_ratio = 0.7  # new data : original data
+    # known_sample = 0.6
+    # new_ratio = 0.6  # new data : original data
     # total_length = len(y1)
     # x1_number = int(total_length * labeled_ratio)
     # x1_indices = np.arange(len(y1))
@@ -164,11 +168,15 @@ def merge_two_dataset(x1, x2, y1, y2):
     # x1 = np.array(x1)[x1_indices][:x1_number]
     # y1 = np.array(y1)[x1_indices][:x1_number]
     #
-    x2_number = int(len(y1) * new_ratio)
-    x2_indices = np.arange(len(y2))
-    np.random.shuffle(x2_indices)
-    x2 = np.array(x2)[x2_indices][:x2_number]
-    y2 = np.array(y2)[x2_indices][:x2_number]
+    # x1_number = int(len(y1) * known_sample)
+    # x1_indices = np.random.choice(np.arange(len(y1)), size=x1_number, replace=True)
+    # x1 = np.array(x1)[x1_indices]
+    # y1 = np.array(y1)[x1_indices]
+
+    # x2_number = int(len(y1) * new_ratio)
+    # x2_indices = np.random.choice(np.arange(len(y2)), size=x2_number, replace=True)
+    # x2 = np.array(x2)[x2_indices]
+    # y2 = np.array(y2)[x2_indices]
 
     assert len(x1) == len(y1)
     assert len(x2) == len(y2)
@@ -184,18 +192,30 @@ def merge_two_dataset(x1, x2, y1, y2):
     return x, y
 
 
-def read_unlabel_data(labeled_x_y, unlabel_dataset_index, loop):
-    unlabel_data = get_unlabel_data(get_cifar_10_set(unlabel_dataset_index))
+def get_labeld_data_random(size):
+    init_train_set = unpickle(get_cifar_10_set(1))
+    init_x, init_y = init_train_set[b'data'], init_train_set[b'labels']
+    init_x = init_x[:size]
+    init_y = init_y[:size]
+
+    return init_x, init_y
+
+
+def read_unlabel_data(unlabel_dataset_index, unlabel_test_size):
+    unlabel_data = get_unlabel_data(get_cifar_10_set(unlabel_dataset_index), size=unlabel_test_size)
     predicated, agree_indices = get_three_predictions(unlabel_data, agree_number=2)
     print('conflict number: {}'.format(conflict_num))
     print('data set size is {}'.format(len(unlabel_data)))
     print('agreed number is {}'.format(len(agree_indices)))
 
-    create_label_dataset = 'dataset/cifar10_new_label_{}'.format(loop)
-    label_x, label_y = labeled_x_y
     new_label_data = unlabel_data[agree_indices]
-    label_x, label_y = merge_two_dataset(label_x, new_label_data, label_y, predicated)
 
+    return new_label_data, predicated
+
+
+def create_new_labled_data(new_x, new_y, init_size, loop):
+    init_x, init_y = get_labeld_data_random(init_size)
+    label_x, label_y = merge_two_dataset(init_x, new_x, init_y, new_y)
+    create_label_dataset = 'dataset/cifar10_new_label_{}'.format(loop)
     save_labled_data(create_label_dataset, label_x, label_y)
-
     return create_label_dataset

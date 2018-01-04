@@ -2,3 +2,7 @@ models/*
 __pycache__/*
 .idea/*
 model_paths.txt
+dataset/*
+precision_log_*
+precision_lo*
+tf-log/**
