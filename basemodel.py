@@ -167,7 +167,7 @@ def train(hps, train_corpus, model_path=None):
                     if total_steps % 500 == 0:
                         print("epoch: {}/{} loss: {}".format(i, epoch, loss))
 
-                    if total_steps > 0 and total_steps % 50 == 0:
+                    if total_steps > 0 and total_steps % 500 == 0:
                         summary_writer.flush()
                         if loss < min_loss:
                             min_loss = loss
