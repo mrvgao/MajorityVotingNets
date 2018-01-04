@@ -6,3 +6,4 @@ dataset/*
 precision_log_*
 precision_lo*
 tf-log/**
+model_paths.txt
